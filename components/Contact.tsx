@@ -4,10 +4,40 @@ import { useState } from "react";
 
 export default function Contact() {
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setSubmitted(true);
+    setLoading(true);
+    setError("");
+
+    const form = e.currentTarget;
+    const data = {
+      access_key: "013b4ac4-0095-4c9d-9753-a053526d8584",
+      from_name: (form.elements.namedItem("name") as HTMLInputElement).value,
+      email: (form.elements.namedItem("email") as HTMLInputElement).value,
+      subject: `[Stabeli Studio] ${(form.elements.namedItem("service") as HTMLSelectElement).value || "Novo contato"}`,
+      message: (form.elements.namedItem("message") as HTMLTextAreaElement).value,
+    };
+
+    try {
+      const res = await fetch("https://api.web3forms.com/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      const json = await res.json();
+      if (json.success) {
+        setSubmitted(true);
+      } else {
+        setError("Algo deu errado. Tente novamente.");
+      }
+    } catch {
+      setError("Erro de conexão. Tente novamente.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -25,14 +55,14 @@ export default function Contact() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium mb-2">Seu nome</label>
-                <input type="text" placeholder="Digite seu nome" required
+                <input name="name" type="text" placeholder="Digite seu nome" required
                   className="w-full px-[18px] py-[14px] text-base bg-[#f5f5f7] rounded-[14px]
                              border border-transparent outline-none
                              focus:border-black focus:bg-white transition-all" />
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2">E-mail</label>
-                <input type="email" placeholder="seu@email.com" required
+                <input name="email" type="email" placeholder="seu@email.com" required
                   className="w-full px-[18px] py-[14px] text-base bg-[#f5f5f7] rounded-[14px]
                              border border-transparent outline-none
                              focus:border-black focus:bg-white transition-all" />
@@ -40,7 +70,7 @@ export default function Contact() {
             </div>
             <div>
               <label className="block text-sm font-medium mb-2">O que você precisa?</label>
-              <select className="w-full px-[18px] py-[14px] text-base bg-[#f5f5f7] rounded-[14px]
+              <select name="service" className="w-full px-[18px] py-[14px] text-base bg-[#f5f5f7] rounded-[14px]
                                  border border-transparent outline-none appearance-none
                                  focus:border-black focus:bg-white transition-all">
                 <option value="">Selecione um serviço</option>
@@ -52,15 +82,17 @@ export default function Contact() {
             </div>
             <div>
               <label className="block text-sm font-medium mb-2">Conta mais sobre o projeto</label>
-              <textarea placeholder="Me fala sobre seu negócio, o que você precisa e qual o prazo..." required
+              <textarea name="message" placeholder="Me fala sobre seu negócio, o que você precisa e qual o prazo..." required
                 className="w-full px-[18px] py-[14px] text-base bg-[#f5f5f7] rounded-[14px] h-[140px] resize-y
                            border border-transparent outline-none
                            focus:border-black focus:bg-white transition-all" />
             </div>
-            <button type="submit"
+            {error && <p className="text-red-500 text-sm">{error}</p>}
+            <button type="submit" disabled={loading}
               className="w-full py-4 text-base font-semibold text-white bg-black rounded-[14px]
-                         hover:bg-neutral-800 hover:scale-[1.01] transition-all duration-200 mt-2">
-              Enviar mensagem →
+                         hover:bg-neutral-800 hover:scale-[1.01] transition-all duration-200 mt-2
+                         disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100">
+              {loading ? "Enviando..." : "Enviar mensagem →"}
             </button>
           </form>
         ) : (
