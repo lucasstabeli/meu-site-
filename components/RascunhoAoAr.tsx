@@ -1,12 +1,12 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useSyncExternalStore } from "react";
 import { m, useMotionValueEvent, useTransform, type MotionValue } from "framer-motion";
 import { Phone } from "@/components/phone/Phone";
 import { TelaConfirmado, TelaPlanta, TelaWireframe } from "@/components/phone/telas";
 import { AppModelo } from "@/components/seu-negocio/AppModelo";
 import { MODELOS, corHex } from "@/components/seu-negocio/seu-negocio-dados";
-import { useDesktopMotion, useReduzirMovimento } from "@/lib/useDesktopMotion";
+import { DESKTOP_QUERY } from "@/lib/useDesktopMotion";
 import { useProgressoRolagem } from "@/lib/useProgressoRolagem";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
@@ -36,7 +36,7 @@ const CODIGO: [string, boolean][][] = [
   [["  <", false], ["Servico", true], [' nome="Corte" duracao="30 min" />', false]],
   [["  <", false], ["Servico", true], [' nome="Barba" duracao="20 min" />', false]],
   [["  <", false], ["Horarios", true], [' de="9h" ate="23h" />', false]],
-  [["  <", false], ["Confirmar", true], [' aviso="whatsapp" />', false]],
+  [["  <", false], ["Confirmar", true], [' aviso="email" />', false]],
   [["</", false], ["Agenda", true], [">", false]],
 ];
 
@@ -45,25 +45,57 @@ const TelaReal = () => <AppModelo modelo={BARBEARIA} nome="Barbearia Modelo" cor
 
 function Titulo() {
   return (
-    <h2 className="text-[clamp(32px,4.5vw,56px)] font-bold leading-[1.08] tracking-[-0.03em] text-tinta">
+    <h2 className="text-balance text-[clamp(32px,4.5vw,56px)] font-bold leading-[1.08] tracking-[-0.03em] text-tinta">
       Do rascunho ao ar
     </h2>
   );
 }
 
-export default function RascunhoAoAr() {
-  const desktop = useDesktopMotion();
-  const reduzir = useReduzirMovimento();
-  return desktop && !reduzir ? <Grudado /> : <Empilhado reduzir={reduzir} />;
+// Mesma condição do CSS (.rascunho-grudado em app/globals.css).
+const GRUDADO_QUERY = `${DESKTOP_QUERY} and (prefers-reduced-motion: no-preference)`;
+
+/**
+ * true/false no navegador; null no HTML exportado e na hidratação. Enquanto é null as
+ * duas versões vão no HTML e o CSS mostra a certa já no primeiro desenho (sem salto de
+ * layout). Depois da hidratação a versão escondida sai do DOM.
+ */
+function useModoGrudado(): boolean | null {
+  return useSyncExternalStore<boolean | null>(
+    (onChange) => {
+      const mql = window.matchMedia(GRUDADO_QUERY);
+      mql.addEventListener("change", onChange);
+      return () => mql.removeEventListener("change", onChange);
+    },
+    () => window.matchMedia(GRUDADO_QUERY).matches,
+    () => null,
+  );
 }
 
-/* ── Celular / reduzir movimento: passos empilhados, sem sticky ──────────────── */
+export default function RascunhoAoAr() {
+  const grudado = useModoGrudado();
+  return (
+    <section id="como-funciona" className="bg-white">
+      {grudado !== true ? (
+        <div className="rascunho-empilhado">
+          <Empilhado />
+        </div>
+      ) : null}
+      {grudado !== false ? (
+        <div className="rascunho-grudado">
+          <Grudado />
+        </div>
+      ) : null}
+    </section>
+  );
+}
+
+/* ── Celular / reduzir movimento / sem JS: passos empilhados, sem sticky ─────── */
 
 const TELAS_ESTATICAS = [TelaPlanta, TelaWireframe, TelaReal, TelaConfirmado];
 
-function Empilhado({ reduzir }: { reduzir: boolean }) {
+function Empilhado() {
   return (
-    <section id="como-funciona" className="bg-white py-24 lg:py-32">
+    <div className="py-24 lg:py-32">
       <div className="mx-auto max-w-[1200px] px-5 sm:px-8 lg:px-12">
         <Titulo />
         <ol className="mt-12 grid gap-16 md:grid-cols-2 md:gap-x-8">
@@ -78,30 +110,25 @@ function Empilhado({ reduzir }: { reduzir: boolean }) {
                   </h3>
                   <p className="mt-2 max-w-[60ch] text-[16px] leading-[1.6] text-grafite sm:text-[17px]">{p.texto}</p>
                 </div>
-                <m.div
-                  aria-hidden="true"
-                  initial={{ opacity: 0 }}
-                  whileInView={{ opacity: 1 }}
-                  viewport={{ once: true, amount: 0.5 }}
-                  transition={{ duration: reduzir ? 0 : 0.4, ease: EASE }}
-                >
-                  <Phone className="w-[200px]">
+                {/* Surge ao entrar na tela só com CSS (.surge-ao-ver): nunca sai escondido no HTML. */}
+                <div aria-hidden="true" className="surge-ao-ver">
+                  <Phone className="w-[min(240px,72vw)]">
                     <Tela />
                   </Phone>
-                </m.div>
+                </div>
               </li>
             );
           })}
         </ol>
       </div>
-    </section>
+    </div>
   );
 }
 
-/* ── Desktop: seção grudada de 400vh que troca o conteúdo ao rolar ───────────── */
+/* ── Desktop: seção grudada de 300vh que troca o conteúdo ao rolar ───────────── */
 
 function Grudado() {
-  const ref = useRef<HTMLElement>(null);
+  const ref = useRef<HTMLDivElement>(null);
   const p = useProgressoRolagem(ref, ["start start", "end end"]);
   const [passo, setPasso] = useState(0);
   // O React só re-renderiza quando o passo muda; o resto é motion value.
@@ -133,7 +160,7 @@ function Grudado() {
   }
 
   return (
-    <section id="como-funciona" ref={ref} className="relative h-[400vh] bg-white">
+    <div ref={ref} className="relative h-[300vh]">
       <div className="sticky top-0 flex h-[100svh] items-center overflow-hidden">
         <div className="mx-auto grid w-full max-w-[1200px] grid-cols-12 items-center gap-8 px-12 pt-16">
           <div className="col-span-5">
@@ -216,7 +243,7 @@ function Grudado() {
           </div>
         </div>
       </div>
-    </section>
+    </div>
   );
 }
 

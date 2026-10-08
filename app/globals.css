@@ -15,11 +15,7 @@
   --color-planta-escuro: #1F2BC2;  /* hover/pressionado */
   --color-planta-claro: #7C86FF;   /* destaque no preto: 6,3:1 */
   --color-erro: #C0262D;           /* 5,9:1 no branco */
-
-  --radius-campo: 14px;
-  --radius-painel: 24px;
-  --radius-celular: 44px;
-  --radius-tela: 36px;
+  --color-borda-campo: #86868B;    /* borda de campos: 3,6:1 no branco, 3,3:1 no #F5F5F7 */
 }
 
 html {
@@ -68,6 +64,45 @@ details[open] .faq-icone { transform: rotate(45deg); }
 /* Troca de cor do app-modelo (resposta a clique). */
 .cor-transicao {
   transition: background-color 250ms, color 250ms, border-color 250ms;
+}
+
+/* ── Entrada do hero (CSS puro: o HTML já chega visível e roda sem JavaScript) ──
+   Desktop com mouse: linhas do H1 sobem só com transform (sem esconder o maior
+   elemento da tela, bom para o LCP); texto e celular aparecem com opacidade.
+   Celular: só opacidade no texto de apoio e no celular. Reduzir movimento: nada. */
+@keyframes hero-sobe { from { transform: translateY(28px); } }
+@keyframes hero-surge { from { opacity: 0; transform: translateY(var(--hero-y, 0)); } }
+@keyframes hero-cota { from { transform: scaleX(0); } }
+
+@media (prefers-reduced-motion: no-preference) {
+  .hero-bloco,
+  .hero-celular { animation: hero-surge 400ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+}
+@media (min-width: 1024px) and (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .hero-linha { animation: hero-sobe 600ms cubic-bezier(0.22, 1, 0.36, 1) both; animation-delay: calc(var(--i, 0) * 80ms); }
+  .hero-bloco { --hero-y: 12px; animation-duration: 500ms; animation-delay: 300ms; }
+  .hero-celular { --hero-y: 40px; animation-duration: 700ms; animation-delay: 200ms; }
+  .hero-cota { transform-origin: left; animation: hero-cota 800ms 400ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+}
+
+/* ── "Do rascunho ao ar": versão grudada (desktop com mouse, com JS) ou empilhada ──
+   A escolha é feita aqui, no CSS, já no primeiro desenho da página: a altura certa
+   (300vh) existe antes do JavaScript carregar, então links com #contato etc. param
+   no lugar certo. A classe "js" é posta no <html> por um script curto no <head>;
+   sem JavaScript fica sempre a versão empilhada (legível, sem rolagem presa). */
+.rascunho-grudado { display: none; }
+@media (min-width: 1024px) and (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .js .rascunho-grudado { display: block; }
+  .js .rascunho-empilhado { display: none; }
+}
+
+/* Celulares da versão empilhada: aparecem ao entrar na tela (ligado à rolagem, sem JS).
+   Navegador sem suporte ou "reduzir movimento": já aparecem prontos. */
+@keyframes surge { from { opacity: 0; } }
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .surge-ao-ver { animation: surge linear both; animation-timeline: view(); animation-range: entry 10% entry 70%; }
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

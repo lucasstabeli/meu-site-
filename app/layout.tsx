@@ -74,11 +74,17 @@ const jsonLd = {
   areaServed: "BR",
 };
 
+const SCRIPT_JS = 'document.documentElement.classList.add("js")';
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pt-BR" className={inter.variable}>
+    // suppressHydrationWarning: o script abaixo acrescenta a classe "js" antes do React.
+    <html lang="pt-BR" className={inter.variable} suppressHydrationWarning>
       <head>
         <meta httpEquiv="Content-Security-Policy" content={csp} />
+        {/* Marca "tem JavaScript" antes do primeiro desenho (app/globals.css usa .js para
+            escolher a seção grudada sem salto de layout). Coberto pelo 'unsafe-inline'. */}
+        <script dangerouslySetInnerHTML={{ __html: SCRIPT_JS }} />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}

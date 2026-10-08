@@ -1,65 +1,27 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import {
-  m,
-  useAnimationControls,
-  useInView,
-  useTransform,
-  type Variants,
-} from "framer-motion";
+import { m, useInView, useTransform } from "framer-motion";
 import { Cota, Phone, StatusBar } from "@/components/phone/Phone";
 import { TelaConfirmado } from "@/components/phone/telas";
 import { useProgressoRolagem } from "@/lib/useProgressoRolagem";
-import { DESKTOP_QUERY, REDUZIR_QUERY, useDesktopMotion, useReduzirMovimento } from "@/lib/useDesktopMotion";
+import { useDesktopMotion, useReduzirMovimento } from "@/lib/useDesktopMotion";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
-// Entrada do hero (uma vez). `custom` = atraso em segundos.
-// "deDesktop" coloca o deslocamento inicial; no celular a entrada é só opacidade.
-const entrada: Variants = {
-  escondido: { opacity: 0 },
-  deDesktop: (c: { y: number }) => ({ opacity: 0, y: c.y }),
-  visivelDesktop: (c: { delay: number; dur: number }) => ({
-    opacity: 1,
-    y: 0,
-    transition: { delay: c.delay, duration: c.dur, ease: EASE },
-  }),
-  visivelCelular: { opacity: 1, transition: { duration: 0.4, ease: EASE } },
-  pronto: { opacity: 1, y: 0, transition: { duration: 0 } },
-};
-
-const cotaEntrada: Variants = {
-  escondido: { scaleX: 0 },
-  visivelDesktop: { scaleX: 1, transition: { delay: 0.4, duration: 0.8, ease: EASE } },
-  visivelCelular: { scaleX: 1, transition: { duration: 0 } },
-  pronto: { scaleX: 1, transition: { duration: 0 } },
-};
-
 const LINHAS_H1 = ["Sites, apps e sistemas", "que fazem seu negócio", "funcionar sozinho."];
 
+/*
+ * Entrada do hero: feita em CSS (app/globals.css, classes .hero-*), não com o framer.
+ * Assim o HTML exportado já chega visível (nada de opacity:0 esperando o JavaScript),
+ * a animação roda até sem JS e o H1 (maior elemento da primeira tela) só se move com
+ * transform, sem atrasar o LCP. "Reduzir movimento" desliga tudo no próprio CSS.
+ */
 export default function Hero() {
   const ref = useRef<HTMLElement>(null);
   const reduzir = useReduzirMovimento();
   const desktop = useDesktopMotion();
   const parallax = desktop && !reduzir;
-
-  const controls = useAnimationControls();
-  useEffect(() => {
-    // Decide a entrada no navegador (no HTML exportado tudo começa invisível).
-    const reduz = window.matchMedia(REDUZIR_QUERY).matches;
-    const desk = window.matchMedia(DESKTOP_QUERY).matches;
-    if (reduz) {
-      controls.set("pronto");
-      return;
-    }
-    if (desk) {
-      controls.set("deDesktop");
-      void controls.start("visivelDesktop");
-    } else {
-      void controls.start("visivelCelular");
-    }
-  }, [controls]);
 
   // Parallax suave: só calcula enquanto a pessoa rola sobre o hero.
   const scrollYProgress = useProgressoRolagem(ref, ["start start", "end start"]);
@@ -85,26 +47,14 @@ export default function Hero() {
         <m.div className="lg:col-span-8" style={parallax ? { y: textoY, opacity: textoOpacity } : undefined}>
           <h1 className="text-[clamp(40px,5vw,64px)] font-extrabold leading-[1.02] tracking-[-0.035em] text-tinta">
             {LINHAS_H1.map((linha, i) => (
-              <m.span
-                key={linha}
-                className="lg:block"
-                variants={entrada}
-                initial="escondido"
-                animate={controls}
-                custom={{ y: 28, delay: i * 0.08, dur: 0.6 }}
-              >
+              <span key={linha} className="hero-linha lg:block" style={{ "--i": i } as React.CSSProperties}>
                 {linha}
                 {i < LINHAS_H1.length - 1 ? " " : ""}
-              </m.span>
+              </span>
             ))}
           </h1>
 
-          <m.div
-            variants={entrada}
-            initial="escondido"
-            animate={controls}
-            custom={{ y: 12, delay: 0.3, dur: 0.5 }}
-          >
+          <div className="hero-bloco">
             <p className="mt-6 max-w-[52ch] text-[16px] leading-[1.6] text-grafite sm:text-[17px]">
               Agenda online, cardápio digital, loja no celular e painel para organizar tudo. Eu desenho,
               construo e coloco no ar, com você acompanhando.
@@ -126,44 +76,26 @@ export default function Hero() {
             <p className="mt-6 text-[14px] text-grafite">
               Preço combinado antes de começar. Você fala direto com quem faz.
             </p>
-          </m.div>
+          </div>
         </m.div>
 
         <m.div
           className="flex flex-col items-center lg:col-span-4"
           style={parallax ? { y: celularY, scale: celularScale, willChange: "transform" } : undefined}
         >
-          <m.div
-            className="hidden w-[280px] lg:block"
-            variants={cotaEntrada}
-            initial="escondido"
-            animate={controls}
-            style={{ originX: 0 }}
-          >
+          <div className="hero-cota hidden w-[280px] lg:block">
             <Cota label="1080" className="mb-4" />
-          </m.div>
-          <m.div
-            variants={entrada}
-            initial="escondido"
-            animate={controls}
-            custom={{ y: 40, delay: 0.2, dur: 0.7 }}
-            className="flex flex-col items-center"
-          >
+          </div>
+          <div className="hero-celular flex flex-col items-center">
             <AgendaHero animar={parallax} />
             <p className="mt-4 text-[13px] text-grafite">Modelo ilustrativo</p>
-          </m.div>
+          </div>
         </m.div>
       </div>
 
-      <m.div
-        className="absolute bottom-10 left-12 hidden w-[180px] lg:block"
-        variants={cotaEntrada}
-        initial="escondido"
-        animate={controls}
-        style={{ originX: 0 }}
-      >
+      <div className="hero-cota absolute bottom-10 left-12 hidden w-[180px] lg:block">
         <Cota label="1200" />
-      </m.div>
+      </div>
     </section>
   );
 }
@@ -224,6 +156,27 @@ function CabecalhoAgenda({ passo, titulo }: { passo: number; titulo: string }) {
   );
 }
 
+/** Rodapé fixo das telas 1 a 3: resumo do que já foi escolhido + botão (enche a tela). */
+function RodapeAgenda({ servico, dia, hora, botao }: { servico: string; dia: string; hora: string; botao: string }) {
+  return (
+    <div className="absolute inset-x-4 bottom-5">
+      <dl className="divide-y divide-linha rounded-2xl bg-cinza-papel px-3.5 text-[12px]">
+        {[
+          ["Serviço", servico],
+          ["Dia", dia],
+          ["Horário", hora],
+        ].map(([k, v]) => (
+          <div key={k} className="flex justify-between py-2">
+            <dt className="text-grafite">{k}</dt>
+            <dd className={v === "—" ? "text-grafite" : "font-semibold text-tinta"}>{v}</dd>
+          </div>
+        ))}
+      </dl>
+      <p className="mt-3 rounded-2xl bg-tinta py-3 text-center text-[13px] font-semibold text-white">{botao}</p>
+    </div>
+  );
+}
+
 function TelaServico() {
   return (
     <div className="absolute inset-0 bg-white">
@@ -243,6 +196,7 @@ function TelaServico() {
           </li>
         ))}
       </ul>
+      <RodapeAgenda servico="Corte" dia="—" hora="—" botao="Continuar" />
     </div>
   );
 }
@@ -251,7 +205,8 @@ function TelaDia() {
   return (
     <div className="absolute inset-0 bg-white">
       <CabecalhoAgenda passo={1} titulo="Qual dia?" />
-      <div className="mt-4 grid grid-cols-4 gap-2 px-4">
+      <p className="mt-4 px-4 text-[12px] font-medium text-grafite">Outubro</p>
+      <div className="mt-2 grid grid-cols-4 gap-2 px-4">
         {[
           ["Qui", "9"],
           ["Sex", "10"],
@@ -267,6 +222,8 @@ function TelaDia() {
           </div>
         ))}
       </div>
+      <p className="mt-3 px-4 text-[12px] text-grafite">Sábado: 6 horários livres</p>
+      <RodapeAgenda servico="Corte" dia="Sábado, 11" hora="—" botao="Continuar" />
     </div>
   );
 }
@@ -285,6 +242,7 @@ function TelaHorario() {
           </span>
         ))}
       </div>
+      <RodapeAgenda servico="Corte" dia="Sábado, 11" hora="10h00" botao="Confirmar horário" />
     </div>
   );
 }

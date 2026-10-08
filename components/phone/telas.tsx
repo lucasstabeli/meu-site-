@@ -83,6 +83,9 @@ export function TelaConfirmado({ escalaCheck }: { escalaCheck?: MotionValue<numb
           </div>
         ))}
       </dl>
+      <p className="mt-auto rounded-2xl border border-linha py-3 text-center text-[13px] font-semibold text-tinta">
+        Adicionar ao calendário
+      </p>
     </div>
   );
 }
