@@ -1,25 +1,38 @@
-"use client";
+const LINKS = [
+  { href: "#servicos", rotulo: "Serviços" },
+  { href: "#seu-negocio", rotulo: "Modelos" },
+  { href: "#como-funciona", rotulo: "Como funciona" },
+  { href: "#perguntas", rotulo: "Perguntas" },
+];
 
 export default function Navbar() {
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-12 h-16
-                    bg-white/75 backdrop-blur-xl border-b border-black/[0.07]"
-         style={{ WebkitBackdropFilter: "saturate(180%) blur(20px)" }}>
-      <a href="#hero" className="text-[18px] font-bold tracking-[-0.5px] text-black no-underline">
-        Stabeli Studio
-      </a>
-      <ul className="hidden md:flex gap-8 list-none m-0 p-0">
-        <li><a href="#services" className="text-sm text-black/75 hover:text-black no-underline transition-opacity">Serviços</a></li>
-        <li><a href="#showcase" className="text-sm text-black/75 hover:text-black no-underline transition-opacity">Exemplos</a></li>
-        <li><a href="#process"  className="text-sm text-black/75 hover:text-black no-underline transition-opacity">Como funciona</a></li>
-        <li>
-          <a href="#contact"
-             className="text-sm text-white bg-black px-5 py-2 rounded-full no-underline
-                        hover:bg-neutral-800 transition-colors">
-            Fale comigo
+    <header className="fixed inset-x-0 top-0 z-50 border-b border-linha bg-white/80 backdrop-blur-md">
+      <nav
+        aria-label="Principal"
+        className="mx-auto flex h-16 max-w-[1200px] items-center justify-between gap-4 px-5 sm:px-8 lg:px-12"
+      >
+        <a href="#topo" className="text-[17px] font-bold tracking-[-0.01em] text-tinta">
+          Stabeli Studio
+        </a>
+        <div className="flex items-center gap-8">
+          <ul className="hidden items-center gap-7 md:flex">
+            {LINKS.map((l) => (
+              <li key={l.href}>
+                <a href={l.href} className="text-[15px] text-grafite transition-colors hover:text-tinta">
+                  {l.rotulo}
+                </a>
+              </li>
+            ))}
+          </ul>
+          <a
+            href="#contato"
+            className="inline-flex h-10 items-center rounded-full bg-planta px-4 text-[15px] font-semibold text-white transition-colors hover:bg-planta-escuro md:h-11 md:px-5"
+          >
+            Pedir orçamento
           </a>
-        </li>
-      </ul>
-    </nav>
+        </div>
+      </nav>
+    </header>
   );
 }
