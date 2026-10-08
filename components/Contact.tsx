@@ -130,8 +130,10 @@ export default function Contact() {
         referrerPolicy: "strict-origin-when-cross-origin",
       });
       const json = await res.json().catch(() => null);
-      writeLastSent(Date.now());
       if (res.ok && json?.success) {
+        // So conta o intervalo depois de um envio que deu certo; se falhou,
+        // a pessoa pode tentar de novo na hora, como a mensagem de erro sugere.
+        writeLastSent(Date.now());
         setSubmitted(true);
       } else {
         setError("Algo deu errado. Tente novamente.");
