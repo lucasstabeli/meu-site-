@@ -73,15 +73,17 @@ export default function Contact() {
     function onPrefill(e: Event) {
       const detail = (e as CustomEvent<Prefill>).detail;
       const form = formRef.current;
-      if (!form || !detail) return;
+      if (!detail) return;
+      const reduzir = window.matchMedia(REDUZIR_QUERY).matches;
+      sectionRef.current?.scrollIntoView({ behavior: reduzir ? "auto" : "smooth", block: "start" });
+      // Pedido já enviado: o formulário não está na tela; só leva a pessoa até o contato.
+      if (!form) return;
       const service = form.elements.namedItem("service") as HTMLSelectElement | null;
       const message = form.elements.namedItem("message") as HTMLTextAreaElement | null;
       if (service && (SERVICES as readonly string[]).includes(detail.servico)) service.value = detail.servico;
       if (message) message.value = multiLine(String(detail.mensagem)).slice(0, LIMITS.message);
       setPrefilled(true);
 
-      const reduzir = window.matchMedia(REDUZIR_QUERY).matches;
-      sectionRef.current?.scrollIntoView({ behavior: reduzir ? "auto" : "smooth", block: "start" });
       const primeiroVazio = (["name", "email", "message"] as const)
         .map((n) => form.elements.namedItem(n) as HTMLInputElement | HTMLTextAreaElement | null)
         .find((el) => el && !el.value.trim());

@@ -28,7 +28,7 @@ export function AppTopo({ nome, cor }: { nome: string; cor: string }) {
           className="cor-transicao flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-[17px] font-bold"
           style={{ color: cor }}
         >
-          {(nome.trim()[0] || "S").toUpperCase()}
+          {(Array.from(nome.trim())[0] ?? "S").toUpperCase()}
         </span>
         <div className="min-w-0">
           <p className="line-clamp-2 break-words text-[18px] font-bold leading-tight">{nome}</p>
