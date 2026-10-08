@@ -15,7 +15,7 @@ export function Phone({
       className={`relative rounded-[44px] bg-[#1a1a1a] p-[10px] shadow-[0_30px_60px_-20px_rgba(10,10,10,0.25)] ${className}`}
     >
       <div className="relative aspect-[9/19] overflow-hidden rounded-[36px] bg-white">
-        <div className="absolute left-1/2 top-2 z-20 h-[22px] w-[84px] -translate-x-1/2 rounded-full bg-[#1a1a1a]" />
+        <div className="absolute left-1/2 top-2 z-20 h-[22px] w-[30%] -translate-x-1/2 rounded-full bg-[#1a1a1a]" />
         {children}
       </div>
     </div>

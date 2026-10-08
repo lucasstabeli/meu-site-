@@ -200,7 +200,7 @@ function Grudado() {
             </m.div>
 
             <m.div
-              className="absolute right-0 top-[28%] w-[min(340px,48%)] rounded-[24px] bg-tinta p-5 font-mono text-[13px] leading-[1.7] text-linha xl:right-4"
+              className="absolute right-0 top-[28%] w-max rounded-[24px] bg-tinta p-5 font-mono text-[12px] leading-[1.7] text-linha xl:text-[13px]"
               style={{ opacity: codigoOpacity, x: codigoX }}
             >
               {CODIGO.map((linha, k) => (

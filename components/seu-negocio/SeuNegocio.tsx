@@ -120,7 +120,7 @@ export default function SeuNegocio() {
                     <label
                       htmlFor={`cor-${c.id}`}
                       title={c.nome}
-                      className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-planta [&>span]:peer-checked:ring-2 [&>span]:peer-checked:ring-tinta [&>span]:peer-checked:ring-offset-2 [&>span]:peer-checked:ring-offset-cinza-papel"
+                      className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-planta peer-checked:[&>span]:ring-2 peer-checked:[&>span]:ring-tinta peer-checked:[&>span]:ring-offset-2 peer-checked:[&>span]:ring-offset-cinza-papel"
                     >
                       <span className="block h-8 w-8 rounded-full" style={{ backgroundColor: c.hex }} />
                     </label>
