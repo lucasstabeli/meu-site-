@@ -1,28 +1,27 @@
-import Navbar          from "@/components/Navbar";
-import Hero            from "@/components/Hero";
-import Marquee         from "@/components/Marquee";
-import Services        from "@/components/Services";
-import Stats           from "@/components/Stats";
-import Showcase        from "@/components/Showcase";
-import LiveDemo        from "@/components/LiveDemo";
-import EffectsShowcase from "@/components/EffectsShowcase";
-import Process         from "@/components/Process";
-import Contact         from "@/components/Contact";
-import Footer          from "@/components/Footer";
+import Navbar from "@/components/Navbar";
+import Hero from "@/components/Hero";
+import ParaQuem from "@/components/ParaQuem";
+import Frase from "@/components/Frase";
+import Services from "@/components/Services";
+import SeuNegocio from "@/components/seu-negocio/SeuNegocio";
+import RascunhoAoAr from "@/components/RascunhoAoAr";
+import Faq from "@/components/Faq";
+import Contact from "@/components/Contact";
+import Footer from "@/components/Footer";
 
+// Ordem da página: design/spec-redesign.md, seção 1.
 export default function Home() {
   return (
     <>
       <Navbar />
       <main>
         <Hero />
-        <Marquee />
+        <ParaQuem />
+        <Frase />
         <Services />
-        <Stats />
-        <Showcase />
-        <LiveDemo />
-        <EffectsShowcase />
-        <Process />
+        <SeuNegocio />
+        <RascunhoAoAr />
+        <Faq />
         <Contact />
       </main>
       <Footer />
