@@ -1,50 +1,79 @@
 @import "tailwindcss";
 
-html { scroll-behavior: smooth; }
+@theme inline {
+  --font-sans: var(--font-inter), system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+@theme {
+  --color-tinta: #0A0A0A;          /* texto, seções pretas, botão secundário */
+  --color-papel: #FFFFFF;
+  --color-cinza-papel: #F5F5F7;    /* seções alternadas, campos */
+  --color-linha: #E5E5EA;          /* bordas e divisórias */
+  --color-grafite: #5C5C66;        /* apoio no claro: 6,6:1 no branco */
+  --color-apoio-escuro: #8E8E93;   /* apoio SÓ no preto: 6,1:1 */
+  --color-planta: #2D3CF0;         /* destaque no claro: 7,0:1 */
+  --color-planta-escuro: #1F2BC2;  /* hover/pressionado */
+  --color-planta-claro: #7C86FF;   /* destaque no preto: 6,3:1 */
+  --color-erro: #C0262D;           /* 5,9:1 no branco */
+
+  --radius-campo: 14px;
+  --radius-painel: 24px;
+  --radius-celular: 44px;
+  --radius-tela: 36px;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 80px;
+}
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
-  background: #ffffff;
-  color: #0a0a0a;
-  overflow-x: hidden;
+  font-family: var(--font-sans);
+  font-feature-settings: "cv11";
+  background: var(--color-papel);
+  color: var(--color-tinta);
+  -webkit-font-smoothing: antialiased;
 }
 
-@keyframes marquee {
-  from { transform: translateX(0); }
-  to   { transform: translateX(-50%); }
+:focus-visible {
+  outline: 2px solid var(--color-planta);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+.bg-tinta :focus-visible,
+footer :focus-visible {
+  outline-color: var(--color-planta-claro);
 }
 
-.animate-marquee {
-  animation: marquee 20s linear infinite;
+/* Grade de planta (blueprint): linhas de 1px a cada 32px. */
+.grade-planta {
+  background-image:
+    linear-gradient(to right, rgb(45 60 240 / 0.07) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(45 60 240 / 0.07) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+.grade-planta-tela {
+  background-image:
+    linear-gradient(to right, rgb(45 60 240 / 0.12) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(45 60 240 / 0.12) 1px, transparent 1px);
+  background-size: 20px 20px;
 }
 
-@keyframes livedemo-cursor {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0; }
+/* FAQ: o "+" gira 45° ao abrir. */
+details > summary { list-style: none; }
+details > summary::-webkit-details-marker { display: none; }
+.faq-icone { transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1); }
+details[open] .faq-icone { transform: rotate(45deg); }
+
+/* Troca de cor do app-modelo (resposta a clique). */
+.cor-transicao {
+  transition: background-color 250ms, color 250ms, border-color 250ms;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0);   }
-}
-
-@keyframes aurora-a {
-  from { transform: translate(0, 0) scale(1);    }
-  to   { transform: translate(8%, 6%) scale(1.1); }
-}
-@keyframes aurora-b {
-  from { transform: translate(0, 0) scale(1);      }
-  to   { transform: translate(-10%, -5%) scale(1.12); }
-}
-@keyframes aurora-c {
-  from { transform: translate(0, 0) scale(1);    }
-  to   { transform: translate(6%, -8%) scale(1.08); }
-}
-
-@keyframes blob-morph {
-  0%   { border-radius: 42% 58% 62% 38% / 45% 55% 45% 55%; }
-  25%  { border-radius: 62% 38% 45% 55% / 38% 62% 38% 62%; }
-  50%  { border-radius: 38% 62% 58% 42% / 62% 38% 62% 38%; }
-  75%  { border-radius: 55% 45% 38% 62% / 55% 45% 55% 45%; }
-  100% { border-radius: 42% 58% 62% 38% / 45% 55% 45% 55%; }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
 }
