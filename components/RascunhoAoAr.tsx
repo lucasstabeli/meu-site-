@@ -1,12 +1,13 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { m, useMotionValueEvent, useScroll, useTransform, type MotionValue } from "framer-motion";
+import { m, useMotionValueEvent, useTransform, type MotionValue } from "framer-motion";
 import { Phone } from "@/components/phone/Phone";
 import { TelaConfirmado, TelaPlanta, TelaWireframe } from "@/components/phone/telas";
 import { AppModelo } from "@/components/seu-negocio/AppModelo";
 import { MODELOS, corHex } from "@/components/seu-negocio/seu-negocio-dados";
 import { useDesktopMotion, useReduzirMovimento } from "@/lib/useDesktopMotion";
+import { useProgressoRolagem } from "@/lib/useProgressoRolagem";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
@@ -101,7 +102,7 @@ function Empilhado({ reduzir }: { reduzir: boolean }) {
 
 function Grudado() {
   const ref = useRef<HTMLElement>(null);
-  const { scrollYProgress: p } = useScroll({ target: ref, offset: ["start start", "end end"] });
+  const p = useProgressoRolagem(ref, ["start start", "end end"]);
   const [passo, setPasso] = useState(0);
   // O React só re-renderiza quando o passo muda; o resto é motion value.
   useMotionValueEvent(p, "change", (v) => {

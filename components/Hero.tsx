@@ -5,12 +5,12 @@ import {
   m,
   useAnimationControls,
   useInView,
-  useScroll,
   useTransform,
   type Variants,
 } from "framer-motion";
 import { Cota, Phone, StatusBar } from "@/components/phone/Phone";
 import { TelaConfirmado } from "@/components/phone/telas";
+import { useProgressoRolagem } from "@/lib/useProgressoRolagem";
 import { DESKTOP_QUERY, REDUZIR_QUERY, useDesktopMotion, useReduzirMovimento } from "@/lib/useDesktopMotion";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
@@ -62,7 +62,7 @@ export default function Hero() {
   }, [controls]);
 
   // Parallax suave: só calcula enquanto a pessoa rola sobre o hero.
-  const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
+  const scrollYProgress = useProgressoRolagem(ref, ["start start", "end start"]);
   const textoY = useTransform(scrollYProgress, [0, 1], [0, -60]);
   const textoOpacity = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
   const celularY = useTransform(scrollYProgress, [0, 1], [0, 120]);
@@ -82,8 +82,8 @@ export default function Hero() {
       />
 
       <div className="relative mx-auto grid w-full max-w-[1200px] grid-cols-1 items-center gap-14 px-5 sm:px-8 lg:grid-cols-12 lg:gap-8 lg:px-12">
-        <m.div className="lg:col-span-7" style={parallax ? { y: textoY, opacity: textoOpacity } : undefined}>
-          <h1 className="text-[clamp(40px,6.4vw,80px)] font-extrabold leading-[1.02] tracking-[-0.035em] text-tinta">
+        <m.div className="lg:col-span-8" style={parallax ? { y: textoY, opacity: textoOpacity } : undefined}>
+          <h1 className="text-[clamp(40px,5vw,64px)] font-extrabold leading-[1.02] tracking-[-0.035em] text-tinta">
             {LINHAS_H1.map((linha, i) => (
               <m.span
                 key={linha}
@@ -130,7 +130,7 @@ export default function Hero() {
         </m.div>
 
         <m.div
-          className="flex flex-col items-center lg:col-span-5"
+          className="flex flex-col items-center lg:col-span-4"
           style={parallax ? { y: celularY, scale: celularScale, willChange: "transform" } : undefined}
         >
           <m.div

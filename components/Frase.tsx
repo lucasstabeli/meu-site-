@@ -1,8 +1,9 @@
 "use client";
 
 import { useRef } from "react";
-import { m, useScroll, useTransform, type MotionValue } from "framer-motion";
+import { m, useTransform, type MotionValue } from "framer-motion";
 import { useReduzirMovimento } from "@/lib/useDesktopMotion";
+import { useProgressoRolagem } from "@/lib/useProgressoRolagem";
 
 const FRASE =
   "Seu cliente quer marcar horário, ver o cardápio e fazer o pedido às 23h, quando você já fechou. Eu construo o que resolve isso por você.";
@@ -28,7 +29,7 @@ export default function Frase() {
 
 function FraseAnimada() {
   const ref = useRef<HTMLParagraphElement>(null);
-  const { scrollYProgress } = useScroll({ target: ref, offset: ["start 0.85", "end 0.45"] });
+  const scrollYProgress = useProgressoRolagem(ref, ["start 0.85", "end 0.45"]);
   const n = PALAVRAS.length;
   return (
     <p
