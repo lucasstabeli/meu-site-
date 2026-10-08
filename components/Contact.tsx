@@ -1,6 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { CheckIcon } from "@/components/phone/Phone";
+import { PREFILL_EVENT, type Prefill } from "@/lib/prefill";
+import { multiLine, singleLine } from "@/lib/texto";
+import { REDUZIR_QUERY } from "@/lib/useDesktopMotion";
 
 // Chave publica do Web3Forms: por design ela so permite enviar e-mail para o dono
 // (nao le mensagens nem muda configuracoes). Nao e segredo; num site estatico nao
@@ -9,7 +13,15 @@ import { useEffect, useRef, useState } from "react";
 const WEB3FORMS_ACCESS_KEY = "013b4ac4-0095-4c9d-9753-a053526d8584";
 const WEB3FORMS_ENDPOINT = "https://api.web3forms.com/submit";
 
-const SERVICES = ["Site Profissional", "Aplicativo Mobile", "Landing Page", "Outro"] as const;
+// Lista branca usada na validacao: servico fora dela vira "Novo contato".
+const SERVICES = [
+  "Landing page",
+  "Site",
+  "Aplicativo",
+  "Sistema sob medida",
+  "Banco de dados e integrações",
+  "Outro",
+] as const;
 
 const LIMITS = { name: 100, email: 254, message: 5000 } as const;
 const MIN_MESSAGE = 10;
@@ -21,15 +33,8 @@ const LAST_SENT_KEY = "contact:lastSent";
 
 const EMAIL_RE = /^[^\s@<>()[\],;:"]+@[^\s@<>()[\],;:"]+\.[a-zA-Z]{2,}$/;
 
-/** Remove caracteres de controle (inclui quebras de linha) e espacos repetidos. */
-function singleLine(value: string): string {
-  return value.replace(/[\u0000-\u001F\u007F]+/g, " ").replace(/\s+/g, " ").trim();
-}
-
-/** Mantem quebras de linha, mas tira outros caracteres de controle. */
-function multiLine(value: string): string {
-  return value.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "").trim();
-}
+const EMAIL_CONTATO = "stabeli.studio@gmail.com";
+const ERRO_REDE = `Não foi possível enviar. Confira sua conexão e tente de novo, ou escreva para ${EMAIL_CONTATO}.`;
 
 function readLastSent(): number {
   try {
@@ -51,11 +56,39 @@ export default function Contact() {
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [prefilled, setPrefilled] = useState(false);
   const sendingRef = useRef(false);
   const mountedAtRef = useRef(0);
+  const sectionRef = useRef<HTMLElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
     mountedAtRef.current = Date.now();
+  }, []);
+
+  // Pre-preenchimento vindo do bloco "Veja o seu negocio aqui" (lib/prefill.ts).
+  // So coloca valores nos campos (formulario nao controlado) e leva o foco ate eles:
+  // NADA e enviado sozinho. A pessoa ainda digita nome/e-mail e clica em enviar.
+  useEffect(() => {
+    function onPrefill(e: Event) {
+      const detail = (e as CustomEvent<Prefill>).detail;
+      const form = formRef.current;
+      if (!form || !detail) return;
+      const service = form.elements.namedItem("service") as HTMLSelectElement | null;
+      const message = form.elements.namedItem("message") as HTMLTextAreaElement | null;
+      if (service && (SERVICES as readonly string[]).includes(detail.servico)) service.value = detail.servico;
+      if (message) message.value = multiLine(String(detail.mensagem)).slice(0, LIMITS.message);
+      setPrefilled(true);
+
+      const reduzir = window.matchMedia(REDUZIR_QUERY).matches;
+      sectionRef.current?.scrollIntoView({ behavior: reduzir ? "auto" : "smooth", block: "start" });
+      const primeiroVazio = (["name", "email", "message"] as const)
+        .map((n) => form.elements.namedItem(n) as HTMLInputElement | HTMLTextAreaElement | null)
+        .find((el) => el && !el.value.trim());
+      (primeiroVazio ?? service)?.focus({ preventScroll: true });
+    }
+    window.addEventListener(PREFILL_EVENT, onPrefill);
+    return () => window.removeEventListener(PREFILL_EVENT, onPrefill);
   }, []);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -136,10 +169,10 @@ export default function Contact() {
         writeLastSent(Date.now());
         setSubmitted(true);
       } else {
-        setError("Algo deu errado. Tente novamente.");
+        setError(ERRO_REDE);
       }
     } catch {
-      setError("Erro de conexão. Tente novamente.");
+      setError(ERRO_REDE);
     } finally {
       sendingRef.current = false;
       setLoading(false);
@@ -147,73 +180,95 @@ export default function Contact() {
   }
 
   return (
-    <section id="contact" className="py-[120px] px-12 bg-white">
-      <div className="max-w-[620px] mx-auto">
-        <p className="text-[11px] font-semibold tracking-[2.5px] uppercase text-neutral-500 mb-4">
-          Contato
-        </p>
-        <h2 className="text-[clamp(34px,4.5vw,54px)] font-bold tracking-[-2px] leading-[1.1] text-black max-w-[680px] mb-16">
-          Vamos construir algo incrível juntos?
-        </h2>
+    <section id="contato" ref={sectionRef} className="bg-white py-24 lg:py-32">
+      <div className="mx-auto max-w-[1200px] px-5 sm:px-8 lg:px-12">
+        <div className="max-w-[640px]">
+          <h2 className="text-[clamp(32px,4.5vw,56px)] font-bold leading-[1.08] tracking-[-0.03em] text-tinta">
+            Conta o que você precisa
+          </h2>
+          <p className="mt-4 text-[16px] leading-[1.6] text-grafite sm:text-[17px]">
+            Eu leio cada pedido e respondo com prazo e preço.
+          </p>
 
-        {!submitted ? (
-          <form method="post" onSubmit={handleSubmit} className="space-y-5">
-            {/* Honeypot anti-spam do Web3Forms: escondido de pessoas, leitores de tela e teclado. */}
-            <input type="checkbox" name="botcheck" tabIndex={-1} autoComplete="off"
-              aria-hidden="true" style={{ display: "none" }} defaultChecked={false} />
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-2">Seu nome</label>
-                <input name="name" type="text" placeholder="Digite seu nome" required
-                  autoComplete="name" minLength={2} maxLength={LIMITS.name}
-                  className="w-full px-[18px] py-[14px] text-base bg-[#f5f5f7] rounded-[14px]
-                             border border-transparent outline-none
-                             focus:border-black focus:bg-white transition-all" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-2">E-mail</label>
-                <input name="email" type="email" placeholder="seu@email.com" required
-                  autoComplete="email" maxLength={LIMITS.email}
-                  className="w-full px-[18px] py-[14px] text-base bg-[#f5f5f7] rounded-[14px]
-                             border border-transparent outline-none
-                             focus:border-black focus:bg-white transition-all" />
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">O que você precisa?</label>
-              <select name="service" className="w-full px-[18px] py-[14px] text-base bg-[#f5f5f7] rounded-[14px]
-                                 border border-transparent outline-none appearance-none
-                                 focus:border-black focus:bg-white transition-all">
-                <option value="">Selecione um serviço</option>
-                {SERVICES.map((s) => (
-                  <option key={s}>{s}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Conta mais sobre o projeto</label>
-              <textarea name="message" placeholder="Me fala sobre seu negócio, o que você precisa e qual o prazo..." required
-                minLength={MIN_MESSAGE} maxLength={LIMITS.message}
-                className="w-full px-[18px] py-[14px] text-base bg-[#f5f5f7] rounded-[14px] h-[140px] resize-y
-                           border border-transparent outline-none
-                           focus:border-black focus:bg-white transition-all" />
-            </div>
-            {error && <p role="alert" className="text-red-500 text-sm">{error}</p>}
-            <button type="submit" disabled={loading}
-              className="w-full py-4 text-base font-semibold text-white bg-black rounded-[14px]
-                         hover:bg-neutral-800 hover:scale-[1.01] transition-all duration-200 mt-2
-                         disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100">
-              {loading ? "Enviando..." : "Enviar mensagem →"}
-            </button>
-          </form>
-        ) : (
-          <div className="text-center py-12 px-8 bg-[#f5f5f7] rounded-3xl">
-            <div className="text-[52px] mb-5">✅</div>
-            <h3 className="text-2xl font-bold tracking-[-0.5px] mb-2">Mensagem enviada!</h3>
-            <p className="text-neutral-500 text-[15px]">Obrigado pelo contato. Vou te responder em até 24h.</p>
+          {/* Região sempre presente no DOM (sem display:none) para o leitor de tela anunciar o aviso. */}
+          <div aria-live="polite">
+            {prefilled && !submitted ? (
+              <p className="mt-8 rounded-[14px] border border-planta px-4 py-3 text-[15px] leading-[1.5] text-tinta">
+                Preenchi o pedido com o modelo que você montou. Confira, coloque seu nome e e-mail e envie.
+              </p>
+            ) : null}
           </div>
-        )}
+
+          {!submitted ? (
+            <form ref={formRef} method="post" onSubmit={handleSubmit} className="mt-12 space-y-5">
+              {/* Honeypot anti-spam do Web3Forms: escondido de pessoas, leitores de tela e teclado. */}
+              <input type="checkbox" name="botcheck" tabIndex={-1} autoComplete="off"
+                aria-hidden="true" style={{ display: "none" }} defaultChecked={false} />
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-4">
+                <div>
+                  <label htmlFor="contato-nome" className={rotulo}>Seu nome</label>
+                  <input id="contato-nome" name="name" type="text" placeholder="Digite seu nome" required
+                    autoComplete="name" minLength={2} maxLength={LIMITS.name} className={campo} />
+                </div>
+                <div>
+                  <label htmlFor="contato-email" className={rotulo}>E-mail</label>
+                  <input id="contato-email" name="email" type="email" placeholder="seu@email.com" required
+                    autoComplete="email" maxLength={LIMITS.email} className={campo} />
+                </div>
+              </div>
+              <div>
+                <label htmlFor="contato-servico" className={rotulo}>O que você precisa?</label>
+                <div className="relative">
+                  <select id="contato-servico" name="service" defaultValue="" className={`${campo} appearance-none pr-12`}>
+                    <option value="">Selecione um serviço</option>
+                    {SERVICES.map((s) => (
+                      <option key={s}>{s}</option>
+                    ))}
+                  </select>
+                  <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth={1.5}
+                    className="pointer-events-none absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-tinta">
+                    <path d="m6 9 6 6 6-6" />
+                  </svg>
+                </div>
+              </div>
+              <div>
+                <label htmlFor="contato-mensagem" className={rotulo}>Conta mais sobre o projeto</label>
+                <textarea id="contato-mensagem" name="message"
+                  placeholder="Me fala sobre seu negócio, o que você precisa e qual o prazo..." required
+                  minLength={MIN_MESSAGE} maxLength={LIMITS.message}
+                  className={`${campo} h-[160px] resize-y`} />
+              </div>
+              {error && <p role="alert" className="text-[15px] leading-[1.5] text-erro">{error}</p>}
+              <button type="submit" disabled={loading}
+                className="inline-flex h-12 w-full items-center justify-center rounded-[14px] bg-planta px-6 text-[16px] font-semibold text-white
+                           transition-colors hover:bg-planta-escuro disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto">
+                {loading ? "Enviando..." : "Pedir orçamento"}
+              </button>
+            </form>
+          ) : (
+            <div className="mt-12 rounded-[24px] bg-cinza-papel px-6 py-10 sm:px-8">
+              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-planta text-white">
+                <CheckIcon className="h-6 w-6" strokeWidth={3} />
+              </span>
+              <h3 className="mt-5 text-[24px] font-bold tracking-[-0.01em] text-tinta">Pedido enviado</h3>
+              <p className="mt-2 text-[16px] leading-[1.6] text-grafite">Vou responder no e-mail que você deixou.</p>
+            </div>
+          )}
+
+          <p className="mt-8 text-[15px] leading-[1.6] text-grafite">
+            Prefere e-mail? Escreva para{" "}
+            <a href={`mailto:${EMAIL_CONTATO}`} className="font-semibold text-planta underline underline-offset-4 hover:text-planta-escuro">
+              {EMAIL_CONTATO}
+            </a>
+          </p>
+        </div>
       </div>
     </section>
   );
 }
+
+const rotulo = "mb-2 block text-[15px] font-medium text-tinta";
+const campo =
+  "w-full rounded-[14px] border border-transparent bg-cinza-papel px-[18px] py-[14px] text-[16px] text-tinta " +
+  "placeholder:text-grafite transition-colors focus:border-tinta focus:bg-white " +
+  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-planta";
