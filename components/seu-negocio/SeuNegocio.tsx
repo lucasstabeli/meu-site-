@@ -14,7 +14,7 @@ const MAX_NOME = 32;
 const DEBOUNCE_MS = 600;
 
 const pilula =
-  "flex min-h-[44px] cursor-pointer items-center rounded-full border border-linha bg-white px-4 text-[15px] font-medium text-tinta transition-colors hover:border-tinta " +
+  "flex min-h-[44px] cursor-pointer items-center rounded-full border border-borda-campo bg-white px-4 text-[15px] font-medium text-tinta transition-colors hover:border-tinta " +
   "peer-checked:border-tinta peer-checked:bg-tinta peer-checked:text-white " +
   "peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-planta";
 
@@ -98,7 +98,7 @@ export default function SeuNegocio() {
                 maxLength={MAX_NOME}
                 autoComplete="organization"
                 placeholder="Ex.: Barbearia do Zé"
-                className="h-12 w-full max-w-[420px] rounded-[14px] border border-linha bg-white px-4 text-[16px] text-tinta placeholder:text-grafite focus:border-tinta"
+                className="h-12 w-full max-w-[420px] rounded-[14px] border border-borda-campo bg-white px-4 text-[16px] text-tinta placeholder:text-grafite focus:border-tinta"
               />
             </div>
 

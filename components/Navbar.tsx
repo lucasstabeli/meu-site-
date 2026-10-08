@@ -25,7 +25,7 @@ export default function Navbar() {
           <ul className="hidden items-center gap-7 md:flex">
             {LINKS.map((l) => (
               <li key={l.href}>
-                <a href={l.href} className="text-[15px] text-grafite transition-colors hover:text-tinta">
+                <a href={l.href} className="py-2 text-[15px] text-grafite transition-colors hover:text-tinta">
                   {l.rotulo}
                 </a>
               </li>

@@ -32,7 +32,7 @@ export function AppTopo({ nome, cor }: { nome: string; cor: string }) {
         </span>
         <div className="min-w-0">
           <p className="line-clamp-2 break-words text-[18px] font-bold leading-tight">{nome}</p>
-          <p className="mt-0.5 text-[12px] text-white/80">Aberto agora</p>
+          <p className="mt-0.5 text-[12px] text-white">Aberto agora</p>
         </div>
       </div>
     </div>

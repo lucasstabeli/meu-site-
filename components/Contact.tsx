@@ -64,6 +64,7 @@ export default function Contact() {
   const sectionRef = useRef<HTMLElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const sucessoRef = useRef<HTMLHeadingElement>(null);
+  const ultimoPrefillRef = useRef({ base: "", final: "" });
 
   // Depois do envio o formulário some: leva o foco (e o leitor de tela) até a confirmação.
   useEffect(() => {
@@ -89,7 +90,17 @@ export default function Contact() {
       const service = form.elements.namedItem("service") as HTMLSelectElement | null;
       const message = form.elements.namedItem("message") as HTMLTextAreaElement | null;
       if (service && (SERVICES as readonly string[]).includes(detail.servico)) service.value = detail.servico;
-      if (message) message.value = multiLine(String(detail.mensagem)).slice(0, LIMITS.message);
+      if (message) {
+        // Não apaga o que a pessoa já escreveu: se o campo tem texto dela, o modelo vai no fim.
+        const novo = multiLine(String(detail.mensagem));
+        // Se nada mudou desde o último pré-preenchimento, reaproveita só o texto da pessoa.
+        const atual = message.value.trim();
+        const base = atual === ultimoPrefillRef.current.final ? ultimoPrefillRef.current.base : atual;
+        message.value = (base ? `${base}
+
+${novo}` : novo).slice(0, LIMITS.message);
+        ultimoPrefillRef.current = { base, final: message.value.trim() };
+      }
       setPrefilled(true);
 
       const primeiroVazio = (["name", "email", "message"] as const)
@@ -120,7 +131,7 @@ export default function Contact() {
 
     const now = Date.now();
     if (mountedAtRef.current && now - mountedAtRef.current < MIN_FILL_MS) {
-      setError("Calma! Revise sua mensagem e tente de novo em alguns segundos.");
+      setError("Espere alguns segundos e clique em Pedir orçamento de novo.");
       return;
     }
     const wait = readLastSent() + COOLDOWN_MS - now;
@@ -290,6 +301,6 @@ export default function Contact() {
 
 const rotulo = "mb-2 block text-[15px] font-medium text-tinta";
 const campo =
-  "w-full rounded-[14px] border border-transparent bg-cinza-papel px-[18px] py-[14px] text-[16px] text-tinta " +
+  "w-full rounded-[14px] border border-borda-campo bg-cinza-papel px-[18px] py-[14px] text-[16px] text-tinta " +
   "placeholder:text-grafite transition-colors focus:border-tinta focus:bg-white " +
   "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-planta";
