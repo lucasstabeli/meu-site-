@@ -3,10 +3,10 @@
 import { useEffect } from "react";
 
 /**
- * Protecao paliativa contra clickjacking.
- * O GitHub Pages nao deixa enviar X-Frame-Options nem CSP frame-ancestors
- * (essas diretivas nao funcionam via <meta>), entao, se o site for aberto
- * dentro de um iframe de outro dominio, ele sai do iframe.
+ * Tentativa PALIATIVA contra clickjacking: NAO garante protecao.
+ * Navegadores atuais costumam bloquear a saida do iframe (ex.: sandbox), entao
+ * o site pode continuar dentro do iframe. Protecao real so com cabecalho
+ * (X-Frame-Options / CSP frame-ancestors), que o GitHub Pages nao permite.
  */
 export default function FrameGuard() {
   useEffect(() => {

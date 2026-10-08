@@ -157,7 +157,7 @@ export default function Contact() {
         </h2>
 
         {!submitted ? (
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form method="post" onSubmit={handleSubmit} className="space-y-5">
             {/* Honeypot anti-spam do Web3Forms: escondido de pessoas, leitores de tela e teclado. */}
             <input type="checkbox" name="botcheck" tabIndex={-1} autoComplete="off"
               aria-hidden="true" style={{ display: "none" }} defaultChecked={false} />
