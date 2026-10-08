@@ -20,6 +20,7 @@ export default function Footer() {
               className="inline-flex min-h-[44px] items-center text-white hover:underline focus-visible:underline"
             >
               Instagram @stabelistudio
+              <span className="sr-only"> (abre em nova aba)</span>
             </a>
           </li>
         </ul>

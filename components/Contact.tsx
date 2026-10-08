@@ -57,10 +57,18 @@ export default function Contact() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [prefilled, setPrefilled] = useState(false);
+  // Campo com erro: recebe aria-invalid, aponta para a mensagem e ganha o foco.
+  const [campoErro, setCampoErro] = useState<"" | "name" | "email" | "message">("");
   const sendingRef = useRef(false);
   const mountedAtRef = useRef(0);
   const sectionRef = useRef<HTMLElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
+  const sucessoRef = useRef<HTMLHeadingElement>(null);
+
+  // Depois do envio o formulário some: leva o foco (e o leitor de tela) até a confirmação.
+  useEffect(() => {
+    if (submitted) sucessoRef.current?.focus();
+  }, [submitted]);
 
   useEffect(() => {
     mountedAtRef.current = Date.now();
@@ -127,26 +135,32 @@ export default function Contact() {
     const rawService = field("service");
     const service = (SERVICES as readonly string[]).includes(rawService) ? rawService : "Novo contato";
 
+    const invalido = (campo: "name" | "email" | "message", msg: string) => {
+      setError(msg);
+      setCampoErro(campo);
+      (form.elements.namedItem(campo) as HTMLElement | null)?.focus();
+    };
     if (name.length < 2) {
-      setError("Informe seu nome.");
+      invalido("name", "Informe seu nome.");
       return;
     }
     if (email.length > LIMITS.email || !EMAIL_RE.test(email)) {
-      setError("Informe um e-mail válido.");
+      invalido("email", "Informe um e-mail válido, como nome@exemplo.com.");
       return;
     }
     if (message.length < MIN_MESSAGE) {
-      setError("Conte um pouco mais sobre o projeto (mínimo de 10 caracteres).");
+      invalido("message", "Conte um pouco mais sobre o projeto (mínimo de 10 caracteres).");
       return;
     }
     if (message.length > LIMITS.message) {
-      setError(`A mensagem pode ter no máximo ${LIMITS.message} caracteres.`);
+      invalido("message", `A mensagem pode ter no máximo ${LIMITS.message} caracteres.`);
       return;
     }
 
     sendingRef.current = true;
     setLoading(true);
     setError("");
+    setCampoErro("");
 
     const data = {
       access_key: WEB3FORMS_ACCESS_KEY,
@@ -209,12 +223,14 @@ export default function Contact() {
               <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-4">
                 <div>
                   <label htmlFor="contato-nome" className={rotulo}>Seu nome</label>
-                  <input id="contato-nome" name="name" type="text" placeholder="Digite seu nome" required
+                  <input id="contato-nome" name="name"
+                    aria-invalid={campoErro === "name" || undefined} aria-describedby={campoErro === "name" ? "contato-erro" : undefined} type="text" placeholder="Digite seu nome" required
                     autoComplete="name" minLength={2} maxLength={LIMITS.name} className={campo} />
                 </div>
                 <div>
                   <label htmlFor="contato-email" className={rotulo}>E-mail</label>
-                  <input id="contato-email" name="email" type="email" placeholder="seu@email.com" required
+                  <input id="contato-email" name="email"
+                    aria-invalid={campoErro === "email" || undefined} aria-describedby={campoErro === "email" ? "contato-erro" : undefined} type="email" placeholder="seu@email.com" required
                     autoComplete="email" maxLength={LIMITS.email} className={campo} />
                 </div>
               </div>
@@ -236,11 +252,12 @@ export default function Contact() {
               <div>
                 <label htmlFor="contato-mensagem" className={rotulo}>Conta mais sobre o projeto</label>
                 <textarea id="contato-mensagem" name="message"
+                  aria-invalid={campoErro === "message" || undefined} aria-describedby={campoErro === "message" ? "contato-erro" : undefined}
                   placeholder="Me fala sobre seu negócio, o que você precisa e qual o prazo..." required
                   minLength={MIN_MESSAGE} maxLength={LIMITS.message}
                   className={`${campo} h-[160px] resize-y`} />
               </div>
-              {error && <p role="alert" className="text-[15px] leading-[1.5] text-erro">{error}</p>}
+              {error && <p id="contato-erro" role="alert" className="text-[15px] leading-[1.5] text-erro">{error}</p>}
               <button type="submit" disabled={loading}
                 className="inline-flex h-12 w-full items-center justify-center rounded-[14px] bg-planta px-6 text-[16px] font-semibold text-white
                            transition-colors hover:bg-planta-escuro disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto">
@@ -252,7 +269,9 @@ export default function Contact() {
               <span className="flex h-12 w-12 items-center justify-center rounded-full bg-planta text-white">
                 <CheckIcon className="h-6 w-6" strokeWidth={3} />
               </span>
-              <h3 className="mt-5 text-[24px] font-bold tracking-[-0.01em] text-tinta">Pedido enviado</h3>
+              <h3 ref={sucessoRef} tabIndex={-1} className="mt-5 text-[24px] font-bold tracking-[-0.01em] text-tinta focus:outline-none">
+                Pedido enviado
+              </h3>
               <p className="mt-2 text-[16px] leading-[1.6] text-grafite">Vou responder no e-mail que você deixou.</p>
             </div>
           )}

@@ -8,6 +8,12 @@ const LINKS = [
 export default function Navbar() {
   return (
     <header className="fixed inset-x-0 top-0 z-50 border-b border-linha bg-white/80 backdrop-blur-md">
+      <a
+        href="#conteudo"
+        className="absolute left-4 top-2.5 z-[60] inline-flex h-11 -translate-y-24 items-center rounded-full bg-tinta px-5 text-[15px] font-semibold text-white focus:translate-y-0"
+      >
+        Pular para o conteúdo
+      </a>
       <nav
         aria-label="Principal"
         className="mx-auto flex h-16 max-w-[1200px] items-center justify-between gap-4 px-5 sm:px-8 lg:px-12"
@@ -27,7 +33,7 @@ export default function Navbar() {
           </ul>
           <a
             href="#contato"
-            className="inline-flex h-10 items-center rounded-full bg-planta px-4 text-[15px] font-semibold text-white transition-colors hover:bg-planta-escuro md:h-11 md:px-5"
+            className="inline-flex h-11 items-center rounded-full bg-planta px-4 text-[15px] font-semibold text-white transition-colors hover:bg-planta-escuro md:px-5"
           >
             Pedir orçamento
           </a>

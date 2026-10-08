@@ -58,6 +58,7 @@ function Palavra({
   faixa: [number, number];
   children: React.ReactNode;
 }) {
-  const opacity = useTransform(progresso, faixa, [0.25, 1]);
+  // 0.4 = branco a 40% no #0A0A0A, cerca de 3,8:1 (AA para texto grande). 0.25 ficava em 2,1:1.
+  const opacity = useTransform(progresso, faixa, [0.4, 1]);
   return <m.span style={{ opacity }}>{children}</m.span>;
 }

@@ -149,7 +149,7 @@ export default function SeuNegocio() {
                 onClick={quero}
                 className="inline-flex min-h-12 max-w-full items-center justify-center rounded-full bg-planta px-6 py-3 text-left text-[16px] font-semibold leading-tight text-white transition-colors hover:bg-planta-escuro"
               >
-                {nomeLimpo ? `Quero um assim para a ${nomeLimpo}` : "Quero um app assim"}
+                {nomeLimpo ? `Quero um app assim para ${nomeLimpo}` : "Quero um app assim"}
               </button>
             </div>
           </div>
