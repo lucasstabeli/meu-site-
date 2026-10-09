@@ -67,33 +67,49 @@ details[open] .faq-icone { transform: rotate(45deg); }
 }
 
 /* ── Entrada do hero (CSS puro: o HTML já chega visível e roda sem JavaScript) ──
-   Desktop com mouse: linhas do H1 sobem só com transform (sem esconder o maior
-   elemento da tela, bom para o LCP); texto e celular aparecem com opacidade.
-   Celular: só opacidade no texto de apoio e no celular. Reduzir movimento: nada. */
+   O H1 (maior elemento da primeira tela) só se move com transform, nunca some: bom
+   para o LCP. Desktop com mouse: as 3 linhas sobem. Celular/tablet: a frase quebra em
+   outras linhas, então quem sobe é cada palavra, em onda. Texto de apoio e celular
+   aparecem subindo com opacidade nos dois. Reduzir movimento: nada anima. */
 @keyframes hero-sobe { from { transform: translateY(28px); } }
 @keyframes hero-surge { from { opacity: 0; transform: translateY(var(--hero-y, 0)); } }
 @keyframes hero-cota { from { transform: scaleX(0); } }
 
+.hero-palavra { display: inline-block; }
+
 @media (prefers-reduced-motion: no-preference) {
+  .hero-palavra { animation: hero-sobe 600ms cubic-bezier(0.22, 1, 0.36, 1) both; animation-delay: calc(var(--w, 0) * 45ms); }
   .hero-bloco,
-  .hero-celular { animation: hero-surge 400ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+  .hero-celular { animation: hero-surge 500ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+  .hero-bloco { --hero-y: 12px; animation-delay: 300ms; }
+  .hero-celular { --hero-y: 40px; animation-duration: 700ms; animation-delay: 200ms; }
 }
 @media (min-width: 1024px) and (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .hero-palavra { animation: none; }
   .hero-linha { animation: hero-sobe 600ms cubic-bezier(0.22, 1, 0.36, 1) both; animation-delay: calc(var(--i, 0) * 80ms); }
-  .hero-bloco { --hero-y: 12px; animation-duration: 500ms; animation-delay: 300ms; }
-  .hero-celular { --hero-y: 40px; animation-duration: 700ms; animation-delay: 200ms; }
   .hero-cota { transform-origin: left; animation: hero-cota 800ms 400ms cubic-bezier(0.22, 1, 0.36, 1) both; }
 }
 
-/* ── "Do rascunho ao ar": versão grudada (desktop com mouse, com JS) ou empilhada ──
+/* ── "Do rascunho ao ar": versão grudada (com JS e sem "reduzir movimento") ou empilhada ──
    A escolha é feita aqui, no CSS, já no primeiro desenho da página: a altura certa
-   (300vh) existe antes do JavaScript carregar, então links com #contato etc. param
-   no lugar certo. A classe "js" é posta no <html> por um script curto no <head>;
-   sem JavaScript fica sempre a versão empilhada (legível, sem rolagem presa). */
+   (250svh no celular, 300vh no desktop) existe antes do JavaScript carregar, então
+   links com #contato etc. param no lugar certo. A classe "js" é posta no <html> por
+   um script curto no <head>; sem JavaScript fica sempre a versão empilhada. */
 .rascunho-grudado { display: none; }
-@media (min-width: 1024px) and (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+@media (prefers-reduced-motion: no-preference) {
   .js .rascunho-grudado { display: block; }
   .js .rascunho-empilhado { display: none; }
+}
+
+/* ── Vitrine: janelas que sobem e grudam empilhadas (stacking cards) ──
+   Sticky com top escalonado: cada janela para um pouco abaixo da anterior e a
+   próxima cobre por cima. Sticky não muda a altura da página (sem salto de layout).
+   Sem JavaScript ou com "reduzir movimento": lista comum, uma janela embaixo da outra. */
+@media (prefers-reduced-motion: no-preference) {
+  .js .vitrine-cartao { position: sticky; top: calc(72px + var(--i, 0) * 12px); }
+}
+@media (min-width: 1024px) and (prefers-reduced-motion: no-preference) {
+  .js .vitrine-cartao { top: calc(96px + var(--i, 0) * 18px); }
 }
 
 /* Celulares da versão empilhada: aparecem ao entrar na tela (ligado à rolagem, sem JS).

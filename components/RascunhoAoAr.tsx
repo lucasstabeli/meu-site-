@@ -6,7 +6,6 @@ import { Phone } from "@/components/phone/Phone";
 import { TelaConfirmado, TelaPlanta, TelaWireframe } from "@/components/phone/telas";
 import { AppModelo } from "@/components/seu-negocio/AppModelo";
 import { MODELOS, corHex } from "@/components/seu-negocio/seu-negocio-dados";
-import { DESKTOP_QUERY } from "@/lib/useDesktopMotion";
 import { useProgressoRolagem } from "@/lib/useProgressoRolagem";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
@@ -51,8 +50,9 @@ function Titulo() {
   );
 }
 
-// Mesma condição do CSS (.rascunho-grudado em app/globals.css).
-const GRUDADO_QUERY = `${DESKTOP_QUERY} and (prefers-reduced-motion: no-preference)`;
+// Mesma condição do CSS (.rascunho-grudado em app/globals.css): qualquer tela, sem
+// "reduzir movimento". No celular a versão grudada é mais curta e vertical.
+const GRUDADO_QUERY = "(prefers-reduced-motion: no-preference)";
 
 /**
  * true/false no navegador; null no HTML exportado e na hidratação. Enquanto é null as
@@ -89,7 +89,7 @@ export default function RascunhoAoAr() {
   );
 }
 
-/* ── Celular / reduzir movimento / sem JS: passos empilhados, sem sticky ─────── */
+/* ── Reduzir movimento / sem JS: passos empilhados, sem sticky ─────────────── */
 
 const TELAS_ESTATICAS = [TelaPlanta, TelaWireframe, TelaReal, TelaConfirmado];
 
@@ -125,7 +125,11 @@ function Empilhado() {
   );
 }
 
-/* ── Desktop: seção grudada de 300vh que troca o conteúdo ao rolar ───────────── */
+/* ── Seção grudada que troca o conteúdo ao rolar ──────────────────────────────
+   Desktop: 300vh, texto à esquerda e celular à direita.
+   Celular: 250svh, tudo em coluna (botões + barra, texto do passo, celular no meio),
+   com o título antes do bloco grudado para sobrar altura para o aparelho. svh: a
+   altura não muda quando a barra do navegador do celular aparece ou some. */
 
 function Grudado() {
   const ref = useRef<HTMLDivElement>(null);
@@ -155,95 +159,113 @@ function Grudado() {
   function irPara(k: number) {
     const el = ref.current;
     if (!el) return;
-    const top = el.offsetTop + (k / 4 + 0.05) * (el.offsetHeight - window.innerHeight);
+    const inicio = el.getBoundingClientRect().top + window.scrollY;
+    const top = inicio + (k / 4 + 0.05) * (el.offsetHeight - window.innerHeight);
     window.scrollTo({ top, behavior: "smooth" });
   }
 
   return (
-    <div ref={ref} className="relative h-[300vh]">
-      <div className="sticky top-0 flex h-[100svh] items-center overflow-hidden">
-        <div className="mx-auto grid w-full max-w-[1200px] grid-cols-12 items-center gap-8 px-12 pt-16">
-          <div className="col-span-5">
-            <Titulo />
+    <>
+      <div className="mx-auto max-w-[1200px] px-5 pt-24 sm:px-8 lg:hidden">
+        <Titulo />
+      </div>
+      <div ref={ref} className="relative h-[250svh] lg:h-[300vh]">
+        <div className="sticky top-0 flex h-[100svh] flex-col overflow-hidden pb-4 pt-[76px] lg:flex-row lg:items-center lg:pb-0 lg:pt-0">
+          <div className="mx-auto flex min-h-0 w-full max-w-[1200px] flex-1 flex-col px-5 sm:px-8 lg:grid lg:flex-none lg:grid-cols-12 lg:items-center lg:gap-8 lg:px-12 lg:pt-16">
+            <div className="lg:col-span-5">
+              <div className="hidden lg:block">
+                <Titulo />
+              </div>
 
-            <div className="mt-10 flex gap-2">
-              {PASSOS.map((s, k) => (
-                <button
-                  key={k}
-                  type="button"
-                  onClick={() => irPara(k)}
-                  aria-label={`Ir para o passo ${k + 1}: ${s.titulo}`}
-                  aria-current={passo === k ? "step" : undefined}
-                  className={`flex h-11 w-11 items-center justify-center rounded-full border text-[15px] font-semibold transition-colors ${
-                    passo === k ? "border-planta bg-planta text-white" : "border-linha text-tinta hover:border-tinta"
-                  }`}
-                >
-                  {k + 1}
-                </button>
-              ))}
-            </div>
-            <div className="mt-4 flex gap-1.5" aria-hidden="true">
-              {PASSOS.map((_, k) => (
-                <Segmento key={k} p={p} k={k} />
-              ))}
-            </div>
-
-            <ol className="mt-10 grid">
-              {PASSOS.map((s, i) => (
-                <m.li
-                  key={s.titulo}
-                  aria-current={passo === i ? "step" : undefined}
-                  className="[grid-area:1/1]"
-                  initial={false}
-                  animate={{ opacity: passo === i ? 1 : 0, y: passo === i ? 0 : 12 }}
-                  transition={{ duration: 0.3, ease: EASE }}
-                >
-                  <p className="text-[56px] font-bold leading-none tracking-[-0.03em] text-planta">{i + 1}</p>
-                  <h3 className="mt-4 text-[32px] font-semibold leading-[1.2] tracking-[-0.01em] text-tinta">
-                    {s.titulo}
-                  </h3>
-                  <p className="mt-3 max-w-[44ch] text-[17px] leading-[1.6] text-grafite">{s.texto}</p>
-                </m.li>
-              ))}
-            </ol>
-          </div>
-
-          <div className="relative col-span-7 flex justify-center" aria-hidden="true">
-            <m.div style={{ y: celularY, rotate: celularRotate, willChange: "transform" }}>
-              <Phone className="w-[clamp(220px,calc((100svh-160px)*0.46),300px)]">
-                <m.div className="absolute inset-0" style={{ opacity: realOpacity }}>
-                  <TelaReal />
-                </m.div>
-                <m.div className="absolute inset-0" style={{ opacity: wireOpacity }}>
-                  <TelaWireframe escalas={[c0, c1, c2, c3, c4]} />
-                </m.div>
-                <m.div className="absolute inset-0" style={{ opacity: plantaOpacity }}>
-                  <TelaPlanta />
-                </m.div>
-                <m.div className="absolute inset-0" style={{ opacity: okOpacity }}>
-                  <TelaConfirmado escalaCheck={okScale} />
-                </m.div>
-              </Phone>
-            </m.div>
-
-            <m.div
-              className="absolute right-0 top-[28%] w-max rounded-[24px] bg-tinta p-5 font-mono text-[12px] leading-[1.7] text-linha xl:text-[13px]"
-              style={{ opacity: codigoOpacity, x: codigoX }}
-            >
-              {CODIGO.map((linha, k) => (
-                <LinhaCodigo key={k} p={p} k={k}>
-                  {linha.map(([t, chave], j) => (
-                    <span key={j} className={chave ? "text-planta-claro" : undefined}>
-                      {t}
-                    </span>
+              <div className="flex items-center gap-4 lg:block">
+                <div className="flex gap-2 lg:mt-10">
+                  {PASSOS.map((s, k) => (
+                    <button
+                      key={k}
+                      type="button"
+                      onClick={() => irPara(k)}
+                      aria-label={`Ir para o passo ${k + 1}: ${s.titulo}`}
+                      aria-current={passo === k ? "step" : undefined}
+                      className={`flex h-11 w-11 items-center justify-center rounded-full border text-[15px] font-semibold transition-colors ${
+                        passo === k ? "border-planta bg-planta text-white" : "border-linha text-tinta hover:border-tinta"
+                      }`}
+                    >
+                      {k + 1}
+                    </button>
                   ))}
-                </LinhaCodigo>
-              ))}
-            </m.div>
+                </div>
+                <div className="flex flex-1 gap-1.5 lg:mt-4" aria-hidden="true">
+                  {PASSOS.map((_, k) => (
+                    <Segmento key={k} p={p} k={k} />
+                  ))}
+                </div>
+              </div>
+
+              <ol className="mt-4 grid lg:mt-10">
+                {PASSOS.map((s, i) => (
+                  <m.li
+                    key={s.titulo}
+                    aria-current={passo === i ? "step" : undefined}
+                    className="[grid-area:1/1]"
+                    initial={false}
+                    animate={{ opacity: passo === i ? 1 : 0, y: passo === i ? 0 : 12 }}
+                    transition={{ duration: 0.3, ease: EASE }}
+                  >
+                    <p className="text-[14px] font-semibold text-planta lg:text-[56px] lg:font-bold lg:leading-none lg:tracking-[-0.03em]">
+                      <span className="lg:hidden">Passo </span>
+                      {i + 1}
+                    </p>
+                    <h3 className="mt-1 text-[20px] font-semibold leading-[1.25] tracking-[-0.01em] text-tinta lg:mt-4 lg:text-[32px] lg:leading-[1.2]">
+                      {s.titulo}
+                    </h3>
+                    <p className="mt-1.5 max-w-[44ch] text-[15px] leading-[1.5] text-grafite lg:mt-3 lg:text-[17px] lg:leading-[1.6]">
+                      {s.texto}
+                    </p>
+                  </m.li>
+                ))}
+              </ol>
+            </div>
+
+            <div
+              className="relative mt-4 flex min-h-0 flex-1 items-center justify-center lg:col-span-7 lg:mt-0 lg:flex-none"
+              aria-hidden="true"
+            >
+              <m.div style={{ y: celularY, rotate: celularRotate, willChange: "transform" }}>
+                <Phone className="w-[clamp(150px,calc((100svh-330px)*0.47+20px),250px)] lg:w-[clamp(220px,calc((100svh-160px)*0.46),300px)]">
+                  <m.div className="absolute inset-0" style={{ opacity: realOpacity }}>
+                    <TelaReal />
+                  </m.div>
+                  <m.div className="absolute inset-0" style={{ opacity: wireOpacity }}>
+                    <TelaWireframe escalas={[c0, c1, c2, c3, c4]} />
+                  </m.div>
+                  <m.div className="absolute inset-0" style={{ opacity: plantaOpacity }}>
+                    <TelaPlanta />
+                  </m.div>
+                  <m.div className="absolute inset-0" style={{ opacity: okOpacity }}>
+                    <TelaConfirmado escalaCheck={okScale} />
+                  </m.div>
+                </Phone>
+              </m.div>
+
+              <m.div
+                className="absolute inset-x-0 bottom-0 mx-auto w-max max-w-full overflow-hidden rounded-[20px] bg-tinta p-4 font-mono text-[12px] leading-[1.7] text-linha lg:inset-x-auto lg:bottom-auto lg:right-0 lg:top-[28%] lg:mx-0 lg:rounded-[24px] lg:p-5 xl:text-[13px]"
+                style={{ opacity: codigoOpacity, x: codigoX }}
+              >
+                {CODIGO.map((linha, k) => (
+                  <LinhaCodigo key={k} p={p} k={k}>
+                    {linha.map(([t, chave], j) => (
+                      <span key={j} className={chave ? "text-planta-claro" : undefined}>
+                        {t}
+                      </span>
+                    ))}
+                  </LinhaCodigo>
+                ))}
+              </m.div>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
 

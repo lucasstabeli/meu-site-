@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { m, useInView, useTransform } from "framer-motion";
 import { Cota, Phone, StatusBar } from "@/components/phone/Phone";
 import { TelaConfirmado } from "@/components/phone/telas";
@@ -10,6 +10,10 @@ import { useDesktopMotion, useReduzirMovimento } from "@/lib/useDesktopMotion";
 const EASE = [0.22, 1, 0.36, 1] as const;
 
 const LINHAS_H1 = ["Sites, apps e sistemas", "que fazem seu negócio", "funcionar sozinho."];
+// Índice da primeira palavra de cada linha (atraso escalonado das palavras no celular).
+const PALAVRAS_ANTES = LINHAS_H1.map((_, i) =>
+  LINHAS_H1.slice(0, i).reduce((n, l) => n + l.split(" ").length, 0),
+);
 
 /*
  * Entrada do hero: feita em CSS (app/globals.css, classes .hero-*), não com o framer.
@@ -48,7 +52,16 @@ export default function Hero() {
           <h1 className="text-[clamp(40px,5vw,64px)] font-extrabold leading-[1.02] tracking-[-0.035em] text-tinta">
             {LINHAS_H1.map((linha, i) => (
               <span key={linha} className="hero-linha lg:block" style={{ "--i": i } as React.CSSProperties}>
-                {linha}
+                {/* No celular a frase quebra em outras linhas: quem sobe é cada palavra (CSS). */}
+                {/* O espaço fica fora do span: dentro de um inline-block ele sumiria. */}
+                {linha.split(" ").map((palavra, j, todas) => (
+                  <Fragment key={j}>
+                    <span className="hero-palavra" style={{ "--w": PALAVRAS_ANTES[i] + j } as React.CSSProperties}>
+                      {palavra}
+                    </span>
+                    {j < todas.length - 1 ? " " : ""}
+                  </Fragment>
+                ))}
                 {i < LINHAS_H1.length - 1 ? " " : ""}
               </span>
             ))}
@@ -87,7 +100,7 @@ export default function Hero() {
             <Cota label="1080" className="mb-4" />
           </div>
           <div className="hero-celular flex flex-col items-center">
-            <AgendaHero animar={parallax} />
+            <AgendaHero animar={!reduzir} />
             <p className="mt-4 text-[13px] text-grafite">Modelo ilustrativo</p>
           </div>
         </m.div>
@@ -117,7 +130,7 @@ function AgendaHero({ animar }: { animar: boolean }) {
     return () => timers.forEach((t) => window.clearTimeout(t));
   }, [animar, visivel]);
 
-  // Celular / reduzir movimento: mostra direto a tela final.
+  // Reduzir movimento (e HTML exportado, antes do JS): mostra direto a tela final.
   const atual = animar ? passo : PASSOS_HERO - 1;
 
   return (
